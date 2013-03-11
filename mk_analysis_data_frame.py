@@ -21,7 +21,7 @@ for i in range(len(target)):
     days_in_hospital = dih[dih["MemberID"] == member_id]["DaysInHospital"]
     n_claims = len(df[ df["MemberID"] == member_id])
     sum_pay_delay = sum(list(df[df["MemberID"] == member_id]["PayDelay"]))
-    
+
     # write row
     of.write("{},{},{},{}\n".format(
         member_id,
@@ -29,7 +29,7 @@ for i in range(len(target)):
         n_claims,
         sum_pay_delay
         ))
-    if i!=0 and i % 1000 == 0: 
+    if i!=0 and i % 1000 == 0:
         of.close()
         sys.exit()
 #print len(sdf - sdih)
