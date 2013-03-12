@@ -5,9 +5,18 @@ import re
 import pandas
 
 INFILENAME = "../data/Claims.csv"
-#OUTFILENAME = "../data/y1_Claims_clean.csv"
-#OUTFILENAME = "../data/y2_Claims_clean.csv"
-OUTFILENAME = "../data/y3_Claims_clean.csv"
+if 1:
+    print "pass"
+    OUTFILENAME = "../data/y1_Claims_clean.csv"
+    YEAR = "Y1"
+if 0:
+    print "pass"
+    OUTFILENAME = "../data/y2_Claims_clean.csv"
+    YEAR = "Y2"
+if 0:
+    print "pass"
+    OUTFILENAME = "../data/y3_Claims_clean.csv"
+    YEAR = "Y3"
 
 los2dih = { "": 0., 
             "1 day":1., 
@@ -23,10 +32,8 @@ los2dih = { "": 0.,
             }
             
 
-def clean_line(line):
-    #if line["Year"] != "Y1": 
-    #if line["Year"] != "Y2": 
-    if line["Year"] != "Y3": 
+def clean_line(line, year):
+    if line["Year"] != year: 
         return None
     if line["MemberID"] == "\r": 
         return None
@@ -37,7 +44,7 @@ def clean_line(line):
     line["MemberID"] = int(line["MemberID"])
     return line
             
-def main(infilename=INFILENAME, outfilename=OUTFILENAME):
+def main(infilename=INFILENAME, outfilename=OUTFILENAME, year=YEAR):
     infile = open(infilename)
     outfile = open(outfilename, "w")
     
@@ -49,7 +56,7 @@ def main(infilename=INFILENAME, outfilename=OUTFILENAME):
     for aline in reader:
         if i % 100000 == 0: 
             print i
-        aline = clean_line(aline)
+        aline = clean_line(aline, year)
         if aline: writer.writerow(aline)
         i += 1
         #if i > 200: sys.exit()

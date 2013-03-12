@@ -5,9 +5,9 @@ import re
 import pandas
 
 INFILENAME = "../data/Claims.csv"
-OUTFILENAME = "../data/Claims_clean.csv"
+OUTFILENAME = "../data/Claims_clean"
 
-los2dih = { "":0., 
+los2dih = { "": 0., 
             "1 day":1., 
             "2- 4 weeks":21., 
             "2 days":2., 
@@ -22,26 +22,29 @@ los2dih = { "":0.,
             
 
 def clean_line(line):
-    try:
-        line["LengthOfStay"] = los2dih[line["LengthOfStay"]]
-    except:
-        print line["LengthOfStay"]
-        sys.exit()
+    if line["LengthOfStay"] == "" : return None
+    line["LengthOfStay"] = los2dih[line["LengthOfStay"]]
+    #if line["SupLOS"] == : return None
+    line["PayDelay"] = line["PayDelay"].replace("+","").strip()
+    line["MemberID"] = int(line["MemberID"])
     return line
             
 def main(infilename=INFILENAME, outfilename=OUTFILENAME):
     infile = open(infilename)
     outfile = open(outfilename, "w")
+    
     reader = csv.DictReader(infile)
-    writer = csv.DictWriter(outfile, reader.fieldnames)
+    writer = csv.DictWriter(outfile, reader.fieldnames, lineterminator='\n')
+    writer.writeheader()
     
     i = 0
     for aline in reader:
         if i % 100000 == 0: 
             print i
         aline = clean_line(aline)
-        writer.writerow(aline)
+        if aline: writer.writerow(aline)
         i += 1
+        #if i > 50000: sys.exit()
 
 if __name__ == "__main__":
     main()
