@@ -1,65 +1,113 @@
 #!/usr/local/bin/python
+# ToDo:
+# Set NA with pandas.read_csv
+#na_values : list-like or dict, default None
+#Additional strings to recognize as NA/NaN. If dict passed, specific per-column NA values
+
+
 import os,sys
 import csv
 import re
 import pandas
+import numpy
 
 INFILENAME = "../data/Claims.csv"
-if 1:
-    print "pass"
-    OUTFILENAME = "../data/y1_Claims_clean.csv"
-    YEAR = "Y1"
-if 0:
-    print "pass"
-    OUTFILENAME = "../data/y2_Claims_clean.csv"
-    YEAR = "Y2"
-if 0:
-    print "pass"
-    OUTFILENAME = "../data/y3_Claims_clean.csv"
-    YEAR = "Y3"
 
-los2dih = { "": 0., 
-            "1 day":1., 
-            "2- 4 weeks":21., 
-            "2 days":2., 
-            "3 days":3., 
-            "4 days":4., 
-            "1- 2 weeks":11.,
-            "4- 8 weeks":42., 
-            "6 days":6., 
+DSFS2DSFS = {
+             '' : None,
+             numpy.nan: None,
+             '8- 9 months' : 5.5*30.,
+             '6- 7 months' : 6.5*30,
+             '3- 4 months' : 3.5*30,
+             '1- 2 months' : 1.5*30,
+             '11-12 months' : 11.5*30,
+             '5- 6 months' : 5.5*30,
+             '10-11 months' : 1.5*30,
+             '9-10 months' : 9.5*30,
+             '0- 1 month' : .5*30,
+             '7- 8 months' : 7.5*30,
+             '4- 5 months' : 4.5*30,
+             '2- 3 months' : 2.5*30
+             }
+
+LOS2DIH = { "": 0.,
+            "1 day":1.,
+            "2- 4 weeks":2.*7.,
+            "2 days":2.,
+            "3 days":3.,
+            "4 days":4.,
+            "1- 2 weeks":7.,
+            "4- 8 weeks":4.*7.,
+            "6 days":6.,
             "5 days":5.,
-            "26+ weeks":182.
+            "26+ weeks":26.*7.
             }
-            
 
-def clean_line(line, year):
-    if line["Year"] != year: 
+SEX2SEX = {'M':'M',
+           'F':'F',
+           numpy.nan:None
+           }
+
+AGE2AGE = {'80+':85.,
+            numpy.nan: None,
+            '50-59': (59.-50)/2+52,
+            '20-29': (29.-20)/2+20,
+            '60-69': (69-60.)/2+60,
+            '10-19': (19-10.)/2+10,
+            '0-9': 4.5,
+            '30-39': (39-30.)/2+30,
+            '40-49': (49-40.)/2+40,
+            '70-79': (79-70.)/2+70
+            }
+def clean_charlson(instr):
+    if instr == "0": return 0
+    parts = instr.split("-")
+    if len(parts) > 1:
+        return int(parts[1])-int(parts[0]) / 2.
+
+def clean_line(line, year, members):
+    if line["Year"] != year:
         return None
-    if line["MemberID"] == "\r": 
+    if line["MemberID"] == "\r":
         return None
     #if line["LengthOfStay"] == "" : return None
-    line["LengthOfStay"] = los2dih[line["LengthOfStay"]]
+    line["LengthOfStay"] = LOS2DIH[line["LengthOfStay"]]
     #if line["SupLOS"] == : return None
     line["PayDelay"] = line["PayDelay"].replace("+","").strip()
     line["MemberID"] = int(line["MemberID"])
+    line["Sex"] = SEX2SEX[members.ix[members.MemberID == line["MemberID"],2].values[0]]
+    #try:
+    line["AgeAtFirstClaim"] = AGE2AGE[members.ix[members.MemberID == line["MemberID"],1].values[0]]
+    line["CharlsonIndex"] = clean_charlson(line["CharlsonIndex"])
+    line["DSFS"] = DSFS2DSFS[line["DSFS"]]
+    #except:#
+    #    line["AgeAtFirstClaim"] = None
+    #    print members.ix[members.MemberID == line["MemberID"],1].values[0]
     return line
-            
-def main(infilename=INFILENAME, outfilename=OUTFILENAME, year=YEAR):
-    infile = open(infilename)
-    outfile = open(outfilename, "w")
-    
-    reader = csv.DictReader(infile)
-    writer = csv.DictWriter(outfile, reader.fieldnames, lineterminator='\n')
-    writer.writeheader()
-    
-    i = 0
-    for aline in reader:
-        if i % 100000 == 0: 
-            print i
-        aline = clean_line(aline, year)
-        if aline: writer.writerow(aline)
-        i += 1
-        #if i > 200: sys.exit()
+
+def main(infilename=INFILENAME):
+
+    members = pandas.read_csv("../data/Members.csv")
+
+    for year in ["Y1","Y2","Y3"]:
+    #for year in ["Y1"]:
+        infile = open(INFILENAME)
+        outfile = open("../data/{}_Claims_clean.csv".format(year),"w")
+        reader = csv.DictReader(infile)
+        outfields = reader.fieldnames
+        outfields.extend(("Sex","AgeAtFirstClaim"))
+        writer = csv.DictWriter(outfile, outfields, lineterminator='\n')
+        writer.writeheader()
+
+        i = 0
+        for aline in reader:
+            if i % 100000 == 0:
+                print i
+            aline = clean_line(aline, year, members)
+            if aline: writer.writerow(aline)
+            i += 1
+            #if i > 100: sys.exit()
+        outfile.close()
 
 if __name__ == "__main__":
     main()
