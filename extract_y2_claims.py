@@ -59,15 +59,36 @@ AGE2AGE = {'80+':85.,
             '40-49': (49-40.)/2+40,
             '70-79': (79-70.)/2+70
             }
+
+class switch(object):
+    def __init__(self, value):
+        self.value = value
+        self.fall = False
+
+    def __iter__(self):
+        """Return the match method once, then stop"""
+        yield self.match
+        raise StopIteration
+    
+    def match(self, *args):
+        """Indicate whether or not to enter a case suite"""
+        if self.fall or not args:
+            return True
+        elif self.value in args: # changed for v1.5, see below
+            self.fall = True
+            return True
+        else:
+            return False
+            
 def clean_charlson(instr):
     if instr == "0": return 0
     parts = instr.split("-")
     if len(parts) > 1:
         return int(parts[1])-int(parts[0]) / 2.
 
-def clean_line(line, year, members):
-    if line["Year"] != year:
-        return None
+def clean_line(line, members):
+    #if line["Year"] != year:
+    #    return None
     if line["MemberID"] == "\r":
         return None
     #if line["LengthOfStay"] == "" : return None
@@ -88,26 +109,48 @@ def clean_line(line, year, members):
 def main(infilename=INFILENAME):
 
     members = pandas.read_csv("../data/Members.csv")
+    cl = clean_line # defining in fx speeds things up
+    #for year in ["Y1","Y2","Y3"]:
 
-    for year in ["Y1","Y2","Y3"]:
-    #for year in ["Y1"]:
-        infile = open(INFILENAME)
-        outfile = open("../data/{}_Claims_clean.csv".format(year),"w")
-        reader = csv.DictReader(infile)
-        outfields = reader.fieldnames
-        outfields.extend(("Sex","AgeAtFirstClaim"))
-        writer = csv.DictWriter(outfile, outfields, lineterminator='\n')
-        writer.writeheader()
+    infile = open(INFILENAME)
+    y1outfile = open("../data/Y1_Claims_clean2.csv","w")
+    y2outfile = open("../data/Y2_Claims_clean2.csv","w")
+    y3outfile = open("../data/Y3_Claims_clean2.csv","w")
+    reader = csv.DictReader(infile)
+    outfields = reader.fieldnames
+    outfields.extend(("Sex","AgeAtFirstClaim"))
+    y1writer = csv.DictWriter(y1outfile, outfields, lineterminator='\n')
+    y2writer = csv.DictWriter(y2outfile, outfields, lineterminator='\n')
+    y3writer = csv.DictWriter(y3outfile, outfields, lineterminator='\n')
+    y1writer.writeheader()
+    y2writer.writeheader()
+    y3writer.writeheader()
 
-        i = 0
-        for aline in reader:
-            if i % 100000 == 0:
-                print i
-            aline = clean_line(aline, year, members)
-            if aline: writer.writerow(aline)
-            i += 1
-            #if i > 100: sys.exit()
-        outfile.close()
+    lines = list(reader) # Gotcha: Memory hog
+    for i,aline in enumerate(lines):
+        if i % 100000 == 0:
+            print i
+        aline = cl(aline, members)
+        for case in switch(aline["Year"]):
+            if case("Y1"):
+                y1writer.writerow(aline)
+                break
+            elif case("Y2"):
+                y2writer.writerow(aline)
+                break
+            elif case("Y3"):
+                y3writer.writerow(aline)
+                break
+            else:
+                print "Unkown year detected"
+                sys.exit()
+
+        #if i > 100:  # debugging
+            #outfile.close()            
+            #sys.exit()
+    y1outfile.close()
+    y2outfile.close()
+    y3outfile.close()
 
 if __name__ == "__main__":
     main()
