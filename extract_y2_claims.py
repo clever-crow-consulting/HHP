@@ -107,15 +107,15 @@ def clean_line(line, members):
     return line
 
 def main(infilename=INFILENAME):
-
+    
     members = pandas.read_csv("../data/Members.csv")
     cl = clean_line # defining in fx speeds things up
     #for year in ["Y1","Y2","Y3"]:
 
     infile = open(INFILENAME)
-    y1outfile = open("../data/Y1_Claims_clean2.csv","w")
-    y2outfile = open("../data/Y2_Claims_clean2.csv","w")
-    y3outfile = open("../data/Y3_Claims_clean2.csv","w")
+    y1outfile = open("../data/Y1_Claims_clean4.csv","w")
+    y2outfile = open("../data/Y2_Claims_clean4.csv","w")
+    y3outfile = open("../data/Y3_Claims_clean4.csv","w")
     reader = csv.DictReader(infile)
     outfields = reader.fieldnames
     outfields.extend(("Sex","AgeAtFirstClaim"))
@@ -128,8 +128,9 @@ def main(infilename=INFILENAME):
 
     lines = list(reader) # Gotcha: Memory hog
     for i,aline in enumerate(lines):
-        if i % 100000 == 0:
+        if i % 100000 == 0 and i != 0:
             print i
+            #break
         aline = cl(aline, members)
         for case in switch(aline["Year"]):
             if case("Y1"):

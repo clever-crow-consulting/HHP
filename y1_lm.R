@@ -129,7 +129,7 @@ y3df$SupLOS <- rep(0,length(y3df[,1]))
 
 #y3df[is.na(y3df$avgrf),"avgrf"] <- 0.209179  # Deprecated
 
-submission_file <- "../submissions/target_20130326.csv"
+submission_file <- "../submissions/target_20130328.csv"
 
 write.csv(y3df[logical_list,c("member_id","SupLOS","avgrf")], 
           file=submission_file, row.names=FALSE)

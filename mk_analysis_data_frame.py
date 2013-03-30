@@ -1,4 +1,5 @@
  # Create analysis data frame
+import datetime
 import sys
 import pandas
 import numpy
@@ -12,12 +13,14 @@ TARGET = pandas.read_csv("../data/Target.csv")
 import csv
 #If you combine the member ids from DIH tables (Y2,Y3,Y4), and drop duplicates, 
 # you will have 113,000 unique members. They are the same members represented in the claims.
-dr = csv.DictReader(open("../data/Members.csv"))
+dr = csv.DictReader(open("../data/Members_wInt.csv"))
 MEMBERS_DICT = {}
 for d in dr:
     MEMBERS_DICT[int(d["MemberID"])] = d  # int removes left padding with zero
 
 MEMBERS = MEMBERS_DICT.keys()
+
+
 
 def EDA():
     print claims.groupby("PrimaryConditionGroup").count()
@@ -25,13 +28,13 @@ def EDA():
     print claims["ProcedureGroup"].unique()
 
 def read_files(year_i,years):
-    global claims
-    global dih
-    global of
+    # global claims
+    # global dih
+    # global of
     # join the next year's DIH to this year's claims
     dih = pandas.read_csv("../data/DaysInHospital_{}.csv".format(years[year_i+1]))
     claims = pandas.read_csv("../data/{}_Claims_clean2.csv".format(  years[year_i]))
-    of = open("../data/{}_member_claim_count2.csv".format(years[year_i]),"w")
+    of = open("../data/{}_member_claim_count3.csv".format(years[year_i]),"w")
     return claims, dih, of
 
 def get_uniqs_wout_nan(claims,col):
@@ -76,6 +79,8 @@ def process_member(tin):
 
     # Continuous Variables
     days_in_hospital = sum(list(dih[dih["MemberID"] == member_id]["DaysInHospital"]))
+    age_at_first_claim = numpy.mean([float(x) for x in list(member_claims["AgeAtFirstClaim"]) if not numpy.isnan(x)])
+    #pdb.set_trace()
     n_claims = len(member_claims)
     sum_pay_delay = sum(list(member_claims["PayDelay"]))
     sum_charlson = sum(list(member_claims["CharlsonIndex"]))
@@ -105,7 +110,9 @@ def process_member(tin):
     aline = "{},{},{},{},{},{},".format(
         member_id,
         str(MEMBERS_DICT[member_id]["Sex"]),
-        str(MEMBERS_DICT[member_id]["AgeAtFirstClaim"]),
+        #str(MEMBERS_DICT[member_id]["AgeAtFirstClaim"]),  # This doesn't have the string parsing (i.e. "55-60")
+        #str(age_at_first_claim),
+        str(MEMBERS_DICT[member_id]["AgeInt"]),
         str(days_in_hospital),
         str(n_claims),
         str(sum_pay_delay),
@@ -122,16 +129,18 @@ def process_member(tin):
 
 
 def main():
-    #years = ["Y1","Y2","Y3","Y4"]
-    years = ["Y2","Y3","Y4"]
+    years = ["Y1","Y2","Y3","Y4"]
+    #years = ["Y2","Y3","Y4"]
     #years = ["Y1","Y2"]
-    for year_i in range(len(years)-1):
+    for year_i in xrange(len(years)-1):
         #pool = Pool(processes=5)
         print "Working on {}".format(years[year_i])
         #claims, dih, of = read_files(year)
-        claims, dih, of = read_files(year_i,years)
+        claims, dih, of = read_files(year_i,years   )
         #read_files(year_i,years)
 
+        print "done readin" 
+        
         # Create lists of unique values for each column
         global procedure_group_list
         procedure_group_list = get_uniqs_wout_nan(claims,"ProcedureGroup")
@@ -171,16 +180,19 @@ def main():
         # For each Member in the Target file
 
         #for i in range(len(TARGET)):
-        for i in range(len(MEMBERS)):
+        for i in xrange(len(MEMBERS)):
         #for i in range(10):  # for debugging
+            
+            #print "inside iteration over MEMBERS - " + str(i)
+        
             aline = process_member((MEMBERS[i], claims, dih))
             #aline = process_member((TARGET["MemberID"][i], claims, dih))
             #aline = process_member(TARGET["MemberID"][i])
             lines.append(aline)
-            
             if i!=0 and i % 1000 == 0:
                 print i
                 #break
+                
         print "writing"
         of.writelines(lines)
         of.close()
