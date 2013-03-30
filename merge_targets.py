@@ -3,13 +3,13 @@ import numpy
 
 
 
-data_path = "C:/Users/DanDye/Google Drive/Projects/HeritageHealthPrize/data/"
+data_path = "C:/Users/DanDye/Google Drive/Projects/HeritageHealthPrize/submissions/"
 
 targets = [
-    "target_20130315.csv",
-    "target_20130316_y1treebag.csv"
+    "target_20130330_y1.csv",
+    "target_20130330_y2.csv"
     ]
-of = open(data_path+"target_20130316.csv","w")
+of = open(data_path+"target_20130330.csv","w")
 of.write("MemberID,SupLOS,DIH\n")
     
 lines0 = open(data_path+targets[0]).readlines()

@@ -37,12 +37,12 @@ get_score <- function( predictions, truth ){
 target <- read.csv("../data/Target.csv",
                    header=TRUE) 
 
-y1df <- read.csv("../data/Y1_member_claim_count3.csv",
-                 header=TRUE,
-                 na.strings = c("NA","nan", ""))
-y1df <- y1df[,!(names(y1df) %in% c("Urgent.Care"))] #FixMe: look for bug in .py scripts
-y1df$is.zero <- y1df$days_in_hospital == 0
-y1df$is.max <- y1df$days_in_hospital == 15
+#y1df <- read.csv("../data/Y1_member_claim_count3.csv",
+#                 header=TRUE,
+#                 na.strings = c("NA","nan", ""))
+#y1df <- y1df[,!(names(y1df) %in% c("Urgent.Care"))] #FixMe: look for bug in .py scripts
+#y1df$is.zero <- y1df$days_in_hospital == 0
+#y1df$is.max <- y1df$days_in_hospital == 15
 
 # Y2
 y2df <- read.csv("../data/Y2_member_claim_count3.csv",
@@ -52,6 +52,8 @@ y2df <- read.csv("../data/Y2_member_claim_count3.csv",
 y2df <- y2df[,!(names(y2df) %in% c("Urgent.Care"))]
 y2df$is.zero <- y2df$days_in_hospital == 0
 y2df$is.max <- y2df$days_in_hospital == 15
+
+y1df <- y2df # switcharoo
 
 y3df <- read.csv("../data/y3_member_claim_count3.csv",
                  header=TRUE,
@@ -93,7 +95,7 @@ y3df$y1ctree.likelihood.zero <- predict(tree.y1.zero, y3df )
 y3df[y3df$y1ctree.likelihood.zero > .8,"ctree"] <- 0
 
 
-submission_file <- "../submissions/target_20130330.csv"
+submission_file <- "../submissions/target_20130330_y2.csv"
 y3df$SupLOS <- 0
 write.csv(y3df[logical_list,c("member_id","SupLOS","ctree")], 
           file=submission_file, row.names=FALSE)
