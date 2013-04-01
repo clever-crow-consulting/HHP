@@ -34,6 +34,20 @@ get_score <- function( predictions, truth ){
 # Data in
 y1df <- read.csv("../data/Y1_member_claim_count3.csv")
 y1df <- y1df[,!(names(y1df) %in% c("Urgent.Care"))]
+y1df$is.zero <- y1df$days_in_hospital == 0
+
+ctreemodel <- ctree(is.zero ~ n_claims+Sex+AgeAtFirstClaim+sum_pay_delay+CharlsonSum, data=y1df)
+plot(ctreemodel)
+  
+ztree <- glm(formula = is.zero ~ . - days_in_hospital, 
+    family = binomial(logit), data=y1df)
+
+y1df$pred.zero <- predict(ztree,y1df)
+
+get_score(y1df$pred.zero, y1df$y1df$is.zero )
+  
+
+
 y2df <- read.csv("../data/Y2_member_claim_count3.csv")
 y2df <- y2df[,!(names(y2df) %in% c("Urgent.Care"))]
 
@@ -53,10 +67,18 @@ print(c(model,"y1df/y2df"))
 model1 <- rpart(model, data = y1df)
 model2 <- rpart(model, data = y2df)
 model_and_report(y1df,y2df,model1,model2)
+
+
+y1keepzero <- y1df$days_in_hospital == 0
+y2keepzero <- y2df$days_in_hospital == 0
+
 print(c(model,"suby1/suby2"))
 model1 <- rpart(model, data = suby1)
 model2 <- rpart(model, data = suby2)
 print("Non-zeros only")
+
+
+
 model_and_report(y1df,y2df,model1,model2)
 print("All data only")
 model_and_report(suby1,suby2,model1,model2)
@@ -74,8 +96,8 @@ model_and_report(y1df,y2df,model1,model2)
 #
 model <- "days_in_hospital~n_claims+Sex+AgeAtFirstClaim"
 print(c(model,"y1df/y2df"))
-model1 <- lm(model, data = y1df)
-model2 <- lm(model, data = y2df)
+model1 <- lm(model, data = y1df[!y1df$is.zero,])
+model2 <- lm(model, data = y2df[!y2df$is.zero,])
 model_and_report(y1df,y2df,model1,model2)
 
 model <- "days_in_hospital ~ .-member_id"
@@ -89,7 +111,7 @@ model_and_report(y1df,y2df,model1,model2)
 #
 model <- "days_in_hospital ~ .-member_id"
 print(c(model,"y1df/y2df"))
-model1 <- tree(model, data = y1df)
+model1 <- tree(model, data = y1df[!y1df$is.zero,])
 model2 <- tree(model, data = y2df)
 model_and_report(y1df,y2df,model1,model2)
 

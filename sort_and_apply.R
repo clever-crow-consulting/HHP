@@ -43,9 +43,8 @@ submission$y2dihq2[ix] = log(submission$y2dihq2[ix])
 print("after log")
 stop()
 
-
 #0.209179
-submission$regress2mean <- submission$y2dihq2*.4470
+#submission$regress2mean <- submission$y2dihq2*.4470
 
-write.csv(submission[,c("member_id","SupLOS","regress2mean")], 
-          file="../submissions/target_20130325_sort_apply_regress.csv", row.names=FALSE)
+write.csv(submission[,c("member_id","SupLOS","y2dihq2")], 
+          file="../submissions/target_20130325_sort_apply_log.csv", row.names=FALSE)

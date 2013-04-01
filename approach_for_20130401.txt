@@ -1,0 +1,15 @@
+
+
+1. Use ctree to find 0s and 15s
+ctreemodel <- ctree(is.zero ~ n_claims+Sex+AgeAtFirstClaim+sum_pay_delay+CharlsonSum, data=y1df)
+plot(ctreemodel)
+
+2. Build Y1 and Y2 model with non-0 non-15 data.
+
+3. Predict Y1 with Y2 & reverse. Assess Results.
+
+4. Predict y3 with Y1 and Y3 data
+classify 0s and 15s and overwrite predictions
+average the 2 predictions
+
+4. submit

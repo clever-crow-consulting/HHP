@@ -1,15 +1,22 @@
 
 
-1. Use ctree to find 0s and 15s
-ctreemodel <- ctree(is.zero ~ n_claims+Sex+AgeAtFirstClaim+sum_pay_delay+CharlsonSum, data=y1df)
-plot(ctreemodel)
+Data in: use only members in target file
 
-2. Build Y1 and Y2 model with non-0 non-15 data.
+Model DIY = Zero
 
-3. Predict Y1 with Y2 & reverse. Assess Results.
+Predict Zeros in Y3 with zero models trained on Y1 and Y2
 
-4. Predict y3 with Y1 and Y3 data
-classify 0s and 15s and overwrite predictions
-average the 2 predictions
+Determine the zero threshold with EDA
 
-4. submit
+# Because of the zero inflated nature of the data and the evaluation
+#  metric's bias for short stays, the training data uses only
+#  members with short, non-zero days_in_hospital.
+
+# Predict year 3 using models from both years . Each prediction is written into its own new column
+
+# Copy predictions to new columns (for later comparison) and apply zeros predictions (overwriting the previous predictions where zero confidence exceeds a threshold)
+
+Write these last two columns to file
+
+Execute a python script that averages the two files
+(OPTIONAL: use the optimized constant as a third val for average)
